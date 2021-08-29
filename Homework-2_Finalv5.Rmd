@@ -1,0 +1,1110 @@
+---
+title: "Pranshu Tiwari -Homework 2"
+output:
+  word_document: default
+  html_document: default
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Answer 4 
+Part A
+
+
+```{r}
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+huberlossf2<-function(x,y,alpha,mi,eta,niters2,t){
+  x=x
+  y=y
+  alpha=alpha
+  t=t
+  j=1
+  i=1
+  eta=eta
+  niters2=niters2
+  m2=rep(0,niters2+1)#Slope dummy values for x1  for n iterations 
+  m3=rep(0,niters2+1)#Slope dummy values for intercept for n iteration s
+  loss=matrix(0,nrow=niters2,ncol=length(x))# Each row(i) in matrix represents loss for jth itera
+  huberloss=matrix(0,nrow=niters2,ncol=length(x))#  
+  huberlossav=rep(0,niters2)
+  averageloss=rep(0,niters2)
+  gradmT1=rep(0,niters2)
+  gradmT2=rep(0,niters2)
+  eta=eta
+  gradm1=matrix(0, nrow =niters2, ncol = length(x))
+  gradm2=matrix(0,nrow=niters2,ncol = length(x))
+  m2[[j]]=mi#Slope of theta 
+  m3[[j]]=mi#Slope of theta0
+  eta=eta
+  loss[1,1:length(x)]=(y-m2[[j]]*x-m3[[j]])
+  averageloss[j]=sum(loss[j,1:length(x)])/length(x)
+  alpha=alpha
+  for (j in (1:niters2)){
+    loss[j,(1:length(x))]=(y-m2[[j]]*x-m3[[j]])# Check what condition works?
+    averageloss[j]=sum(loss[j,1:length(x)])/length(x)
+    if((averageloss[j])<=alpha){
+      huberloss[j,1:length(x)]=1/2*(y-m2[[j]]-m3[[j]]*x)^2 
+      huberlossav[j]=sum(huberloss[j,1:length(x)])/length(x)
+      gradm1[j,1:length(x)]=-(y-(m2[[j]]*x+m3[[j]]))*x# First deravative value for values of x 
+      gradm2[j,1:length(x)]=-(y-(m2[[j]]*x+m3[[j]]))#Slope of intercept /First deravative 
+      gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient for parameter 1
+      gradmT2[j]=sum(gradm2[j,1:length(x)])/(length(x))#Average Gradient for Parameter 2/Intercept 
+      m2[[j+1]]=m2[[j]]-eta*gradmT1[j]
+      m3[[j+1]]=m3[[j]]-eta*gradmT2[j]
+      gradmT=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+      if ((gradmT)<=t){
+        break
+      } 
+    }else{
+      huberloss[j,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])*alpha-((0.5)*alpha^2)
+      huberlossav[j]=sum(huberloss[j,1:length(x)])/length(x)
+      gradm1[j,1:length(x)]=-x*alpha# First derative  value for values of x 
+      gradm2[j,1:length(x)]=-alpha
+      gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+      gradmT2[j]=sum(gradm2[j,1:length(x)])/(length(x))#Average Gradient Descent 
+      m2[[j+1]]=m2[[j]]-eta*gradmT1[j]
+      m3[[j+1]]=m3[[j]]-eta*gradmT2[j]
+      gradmT=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+      if ((gradmT)<=t){
+        break
+      }
+    }
+    
+  }
+  jopt=which.min(huberlossav)
+  mopt3=m2[jopt]
+  mopti3=m3[jopt]
+  values<-list("loss"=huberlossav,"slope"=mopt3,"iteration end"=j,"intercept"=mopti3)
+  return(values)
+}
+r=huberlossf2(x=x,y=y,alpha=3,mi=0.01,eta = 1,t=0.01,niters2 = 5000)
+plot(1:r$`iteration end`,r$loss[1:r$`iteration end`],main='Huber-Loss Batch Gradient,Alpha=0.01',ylab="HuberLoss",type='l')
+print(paste("The optimized slope is ",r$slope))
+print(paste("The optimized interceot is ",r$intercept))
+r2=huberlossf2(eta=0.01,t=0.01,x=x,y=y,niters2 = 5000,alpha = 10,mi=0.01)
+plot(2:r2$`iteration end`,r2$loss[2:r2$`iteration end`],main='Huber-Loss Batch Gradient,Alpha=10',ylab="HuberLoss",type='l')
+print(paste("The optimized slope is ",r2$slope))
+print(paste("The optimized intercept is ",r2$intercept))
+
+```
+#Mean Absolute Error _GradientDescent 
+
+```{r}
+#4
+#L1 LOSS
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)# Sample x taken 
+length(x)
+j=1
+i=1
+m2=rep(0,1000)
+m3=rep(0,1000)
+gradmT1=rep(0,1000)
+gradmT2=rep(0,1000)
+gradmT=rep(0,1000)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)# Sample y actual take 
+length(y)
+eta=0.01
+gradm1=matrix(0, nrow =1000, ncol = length(x))
+gradm2=matrix(0,nrow=1000,ncol=length(x))
+t=0.01
+j=1
+i=1
+m2[[j]]=0.01
+m3[[j]]=0.01
+e=matrix(0,nrow=1000,ncol=length(x))
+e[1,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])# Error (Actual-Predicted)#Initial Error at m= initial m
+averageerr=rep(0,1000)
+averageerr[j]=sum(e[j,1:length(x)])/length(x)
+averageerr[j]#Inital Average error
+gradm1[1,1:length(x)]=-x# First derative  value for values of x 
+gradm2[1,1:length(x)]=-1
+gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+gradmT2[j]=-1/length(x)
+gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+for (j in (1:1000)){
+  e[j,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])
+  averageerr[j]=sum(e[j,1:length(x)])/length(x)
+  gradm1[j,1:length(x)]=-x# First derative  value for values of x 
+  gradm2[j,1:length(x)]=-1
+  gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+  gradmT2[j]=sum(gradm2[j,1:length(x)])/length(x)
+  m2[[j+1]]=m2[[j]]-eta*gradmT1[j]# Next iteration slope value which will be needed if we move to next iteration 
+  m3[[j+1]]=m2[[j]]-eta*gradmT2[j]
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  if ((sqrt(sum(gradmT[j]^2)))<=t){
+    break
+  }
+}
+print(j)
+jopt=which.min(averageerr)
+mopt=m2[jopt]
+mopti=m3[jopt]
+print(paste("The optimized slope-Batch Gradient Absolute Loss ",mopt))
+plot(1:j,averageerr[1:j],type="l",main = "Absolute L1 loss : Batch Gradient process",ylab = "L1 loss",xlab=" Iterations")
+print(paste("The optimized intercept using -Batch Gradient Absolute Loss ",mopti))
+```
+
+
+```{r cars3b}
+
+
+```
+```{r,ECHO=FALSE}
+# 4 Stochiastic Gradient for following sample points 
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+length(x)
+j=1
+k=1
+m2=rep(0,4001)
+m3=rep(0,4001)
+e2=rep(0,4000)
+m2[[j]]=0.01
+m3[[j]]=0.01
+niters3=1000
+length(y)
+eta=0.001
+gradm1=rep(0,4000)
+gradm2=rep(0,4000)
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+for (j in (1: niters3)){
+  k=sample(1:length(x),1)# Sample the point 
+  e2[j]=(y[k]-m2[[j]]*x[k]-m3[[j]])^2
+  gradm1[j]=-2*((y[k]-(m2[[j]]*x[k])-m3[[j]])*x[k])
+  m2[j+1]=m2[j]-eta*gradm1[j]#Use the new slope by subtracting its grandient
+  gradm2[j]=-2*(y[k]-(m2[[j]]*x[k])-m3[[j]])
+  m3[j+1]=m3[j]-eta*gradm2[j]#New intercept value
+  gradm[j]=sqrt((gradm1[j])^2+(gradm2[j])^2)
+  if (gradm[j]<t){
+    break
+  }
+}
+jopt=which.min(e2)
+print(j)# Iteration ending point 
+plot(1:j,e2[1:j],ylab="Quadratic Loss ",main = 'Stochiastic Gradient Process',xlab = 'Iterations',type='l')
+print(paste("The optimized slope for Quadratic Loss based on Stochiastic Gradient",m2[jopt]))
+print(paste("The optimized intercept for Quadratic Loss based on Stochiastic Gradient ",m3[jopt]))
+```
+#4 C Stochiastic Gradient Descent-Quadraticl Loss
+
+```{r,ECHO=FALSE}
+# 4 Stochiastic Gradient for following sample points 
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+length(x)
+j=1
+k=1
+m2=rep(0,4001)
+m3=rep(0,4001)
+e2=rep(0,4000)
+m2[[j]]=0.01
+m3[[j]]=0.01
+niters3=1000
+length(y)
+eta=0.001
+gradm1=rep(0,4000)
+gradm2=rep(0,4000)
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+for (j in (1: niters3)){
+  k=sample(1:length(x),1)# Sample the point 
+  e2[j]=(y[k]-m2[[j]]*x[k]-m3[[j]])^2
+  gradm1[j]=-2*((y[k]-(m2[[j]]*x[k])-m3[[j]])*x[k])
+  m2[j+1]=m2[j]-eta*gradm1[j]#Use the new slope by subtracting its grandient
+  gradm2[j]=-2*(y[k]-(m2[[j]]*x[k])-m3[[j]])
+  m3[j+1]=m3[j]-eta*gradm2[j]#New intercept value
+  gradm[j]=sqrt((gradm1[j])^2+(gradm2[j])^2)
+  if (gradm[j]<t){
+    break
+  }
+}
+jopt=which.min(e2)
+print(j)# Iteration ending point 
+plot(1:j,e2[1:j],ylab="Quadratic Loss ",main = 'Stochiastic Gradient Process',xlab = 'Iterations',type='l')
+print(paste("The optimized slope for Quadratic Loss based on Stochiastic Gradient",m2[jopt]))
+print(paste("The optimized intercept for Quadratic Loss based on Stochiastic Gradient ",m3[jopt]))
+```
+
+
+
+
+
+
+#4c L1 Stochiastic Loss
+```{r}
+#Stochiastic Gradient -L1 loss
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+length(x)
+j=1
+k=1
+m2=rep(0,4001)
+e2=rep(0,4000)
+m2[[j]]=0.01
+niters3=2000
+length(y)
+eta=0.001
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+niters3=1000
+length(y)
+eta=0.001
+gradm1=rep(0,4000)
+gradm2=rep(0,4000)
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+for (j in (1: niters3)){
+  k=sample(1:length(x),1)# Sample the point 
+  e2[j]=(y[k]-m2[[j]]*x[k]-m3[[j]])^2
+  gradm1[j]=-x[k]
+  m2[j+1]=m2[j]-eta*gradm1[j]#Use the new slope by subtracting its grandient
+  gradm2[j]=-1
+  m3[j+1]=m3[j]-eta*gradm2[j]#New intercept value
+  gradm[j]=sqrt((gradm1[j])^2+(gradm2[j])^2)
+  if (gradm[j]<t){
+    break
+  }
+}
+jopt=which.min(e2)
+print(j)# Iteration ending point 
+plot(1:j,e2[1:j],ylab="Absolute Loss ",main = 'Stochiastic Gradient Process-Absolute ',xlab = 'Iterations',type='l')
+print(paste("The optimized slope for Absolute  Loss based on Stochiastic Gradient",m2[jopt]))
+
+
+
+```
+
+
+```{r cars6}
+#Stochiastic Gradient on L1 Loss Process 
+#Stochiastic Gradient -L1 loss
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+length(x)
+j=1
+k=1
+m2=rep(0,4001)
+e2=rep(0,4000)
+m2[[j]]=0.01
+niters3=2000
+length(y)
+eta=0.001
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+niters3=1000
+length(y)
+eta=0.001
+gradm1=rep(0,4000)
+gradm2=rep(0,4000)
+gradm=rep(0,4000)
+t=0.01
+m2[[j]]=0.01
+m3[[j]]=0.01
+for (j in (1: niters3)){
+  k=sample(1:length(x),1)# Sample the point 
+  e2[j]=(y[k]-m2[[j]]*x[k]-m3[[j]])^2
+  gradm1[j]=-x[k]
+  m2[j+1]=m2[j]-eta*gradm1[j]#Use the new slope by subtracting its grandient
+  gradm2[j]=-1
+  m3[j+1]=m3[j]-eta*gradm2[j]#New intercept value
+  gradm[j]=sqrt((gradm1[j])^2+(gradm2[j])^2)
+  if (gradm[j]<t){
+    break
+  }
+}
+jopt=which.min(e2)
+print(j)# Iteration ending point 
+plot(1:j,e2[1:j],ylab="Absolute Loss ",main = 'Stochiastic Gradient Process-Absolute ',xlab = 'Iterations',type='l')
+print(paste("The optimized slope for Absolute  Loss based on Stochiastic Gradient",m2[jopt]))
+
+
+```
+#4 c-Stochiastic Gradient -Huber Loss
+
+```{r cars7}
+# Stochiastic Gradient Process for Huber Loss
+x<-c(1,3,5,9,10,12,13,7,10,5,8,9,9,8,8,9,10,1,1,2)
+y=c(6,19,40,37,43, 54,19,21,37,39,39,37,36,35,36,40,46,6,6,12)
+  x=x
+  y=y
+  alpha=20
+  t=t
+  j=1
+  i=1
+  niters2=1000
+  eta=eta
+  m2=rep(0,1000)
+  m3=rep(0,1000)
+  length(m2)
+  loss=rep(0,1000)
+  huberloss=rep(0,1000)#  
+  length(y)
+  length(x)
+  eta=eta
+  gradm1=rep(0,1000)
+  gradm2=rep(0,1000)
+  m2[[j]]=0.01
+  m3[[j]]=0.01
+  eta=0.01
+  niters2=1000
+  t=0.001
+  for (j in (1:niters2)){
+    k=sample(1:length(x),1)# First get a new sample point 
+    loss[j]=(y[k]-m2[[j]]*x[k]-m3[j])# Check what condition works based on jth slope 
+    if((loss[j])<=alpha){
+      huberloss[j]=1/2*(y[k]-m2[[j]]*x[k])^2 
+      gradm1[j]=-(y[k]-(m2[[j]]*x[k])-m3[j])*x[k]# First derative  value for values of x 
+      m2[[j+1]]=m2[[j]]-eta*gradm1[j]# Next Slope 
+      gradm2[j]=-(y[k]-(m2[[j]]*x[k])-m3[j])*1
+      m3[[j+1]]=m3[[j]]-eta*gradm2[j]
+      gradm[j]=sqrt(gradm1[j]^2+gradm2[j]^2)
+      if (gradm[j]^2<=t){
+        break
+      } 
+    }else{
+      huberloss[j]=abs(y[k]-m2[[j]]*x[k]-m3[[j]])*alpha-((0.5)*alpha^2)
+      gradm1[j]=-x[k]*alpha# First derative  value for values of x 
+      m2[j+1]=m2[[j]]-eta*gradm1[j]# next Slope Value
+      gradm2[j]=-1
+      m3[j+1]=m3[[j]]-eta*gradm2[j]
+      gradm[j]=sqrt(gradm1[j]^2+gradm2[j]^2)
+      if ((sqrt(sum(gradm1[j]^2)))<=t){
+        break
+      }
+    }
+    
+  }
+  jopt=which.min(huberloss)
+  mopt3=m2[jopt]
+  mopt4=m3[jopt]
+plot(1:j,huberloss[1:j],xlab="Iterations",ylab="Huber-Loss: Stochiastic",main="Huber Loss: Stochiastic Gradient ",type='l')
+print(paste("The optimized values of slope and intercept are ",mopt3,mopt4))
+```
+
+# Answer 5 
+```{r cars8}
+#5a- Analytical Solution
+set.seed(123)
+N=50
+Y=rep(NA,50)
+e=rnorm(50,0,4)
+X=runif(50, min = -2, max = 2)
+Y[i]=3+2*X[i]+e[i]
+for (i in (1 :50)){
+  Y[i]=3+2*X[i]+e[i]
+}
+df=data.frame(X,Y)
+y=df$Y
+x=df$X
+model1<-lm(y~x,data=df)
+s=summary(model1)# Slope Using Mean Square Error 
+betamean=s$coefficients[2,1]
+print(paste("The coefficient of Slope based on analytical solution is ",betamean))
+######
+SE=(model1$residuals)^2
+# Graph of analytical Solution (Yactual- Ypred)^2
+plot(SE,type='l',col='skyblue3')
+hist(SE,col='skyblue3',main='Histogram of SE-Analytical Sol')
+MSE=sum(SE)/length(x)
+MSE
+```
+
+
+```{r cars9}
+#5 a -Stochiastic Gradient Solution 
+#Data Generation
+set.seed(123)
+N=50
+Y=rep(NA,50)
+e=rnorm(50,0,4)
+X=runif(50, min = -2, max = 2)
+Y[i]=3+2*X[i]+e[i]
+for (i in (1 :50)){
+  Y[i]=3+2*X[i]+e[i]
+}
+
+par=mfrow=c(1,1)
+df=data.frame(X,Y)
+y=df$Y
+x=df$X
+# Stochiastic Process 
+length(x)
+j=1
+k=1
+m2=rep(0,4000)
+e2=rep(0,4000)
+m2[[j]]=0.01
+length(y)
+eta=0.01
+gradm=rep(0,4000)
+t=0.01
+j=1
+k=1
+m2[[j]]=0.01
+m3[[j]]=0.01
+gradm1[j]=-2*(y[k]-m2[[j]]*x[k]-m3[j])*x[k]# First Deravative of slope beta1
+gradm2[j]=-2*(y[k]-(m2[[j]]*x[k]-m3[j]))# First Deravative wrt to intercept /beta0
+e2[[j]]=(y[k]-m2[[j]]*x[k]-m3[j])^2# Quadratic Error (Actual-Predicted)
+gradm[[j]]=sqrt(gradm1[j]^2+gradm2[j]^2)
+while (gradm[j]> t){# Because we have to stop when gradient is near zero
+    k=sample(1:length(x),1)# Sample the point 
+    # First Deravative
+    m2[[j+1]]=m2[[j]]-eta*gradm1[j]#Use new slope beta1
+    m3[[j+1]]=m3[[j]]-eta*gradm2[j]#use new slope for intercept beta0 
+    gradm1[j+1]=-2*(y[k]-m2[[j+1]]*x[k]-m3[[j+1]])*x[k]# Calculate new gradient based on new slope value [d/dm]
+    gradm2[j+1]=-2*(y[k]-m2[[j+1]]*x[k]-m3[j+1])# Gradient of Intercept 
+    e2[j+1]=(y[k]-m2[[j+1]]*x[k]-m3[j+1])^2# Error (Actual-Predicted Error for the new point with new slope
+    j=j+1
+    gradm[[j]]=sqrt(gradm1[j]^2+gradm2[j]^2)
+}
+print(j)# Iteration ends 
+plot(1:j,e2[1:j],ylab="Quadratic Loss ",main = 'Stochiastic Gradient Process',xlab = 'Iterations',type='l')
+print(paste("The optimized slope and intercept for Quadratic Loss based on Stochiastic Gradient are " ,m2[j],"and",m3[[j]],"respectively"))
+
+```
+
+
+```{r cars10}
+#5 a-Batch Gradient Process 
+j=1
+i=1
+m1=rep(0,2000)
+m2=rep(0,2000)
+gradmT1=matrix(0,nrow=2000,ncol=length(x))
+gradmT2=matrix(0,nrow=2000,ncol=length(x))
+eta=0.01
+gradm1=matrix(0,nrow =2000,ncol = length(x))
+gradm2=matrix(0,nrow=2000,ncol=length(x))
+gradmT=matrix(0,nrow=2000,ncol=length(x))
+t=0.01
+j=1
+i=1
+m1[[j]]=0.01
+m2[[j]]=0.01
+e=matrix(0,nrow=2000,ncol=length(x))
+e[1,1:length(x)]=(y-m1[[j]]*x-m2[[j]])^2# Error (Actual-Predicted)#Initial Error at m= initial m
+averageerr=rep(0,2000)
+averageerr[j]=sum(e[j,1:length(x)])/length(x)
+gradm1[1,1:length(x)]=-2*(y-m1[[j]]*x-m2[[j]])*x# First derative  value for values of x 
+gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+gradmT1[j]
+gradm2[1,1:length(x)]=-2*(y-m1[[j]]*x-m2[[j]])#Gradient for intecept 
+gradmT2[j]=sum(gradm2[1,1:length(x)])/(length(x))
+gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+gradmT[j]
+while ((gradmT[j])> t){# Because we have to stop when gradient is near the thresh hold value which means local minima
+  m1[j+1]=m1[[j]]-eta*gradmT1[j]# Create next  iterated slope
+  m2[j+1]=m2[[j]]-eta*gradmT2[j]
+  e[j+1,1:length(x)]=(y-m1[[j+1]]*x-m2[j+1])^2
+  averageerr[j+1]=sum(e[j+1,1:length(x)])/length(x)#Average error over x points 
+  gradm1[j+1,1:length(x)]=-2*(y-(m1[[j+1]]*x+m2[[j+1]]))*x#
+  gradmT1[j+1]=(sum(gradm1[j+1,1:length(x)]))/length(x)#Average Gradient 
+  gradm2[j+1,1:length(x)]=-2*(y-m1[[j+1]]*x-m2[[j+1]])
+  gradmT2[j+1]=(sum(gradm2[j+1,1:length(x)]))/length(x)
+  j=j+1
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+}
+
+print(paste("The optimized slope using Batch Gradient Process for L2 Loss is ",m1[[j]]))
+plot(2:j,averageerr[2:j],type='l',xlab = 'iterations',ylab='L2loss',col='blue',main='Batch Gradient Loss')
+print(paste("The optimized intercept using Batch Gradient Process for L2 Loss is ",m2[[j]]))
+```
+
+
+```{r cars11}
+#5 b- Analytic Solution-Repeat 1000 trials without replacement 
+Y=matrix(0,nrow=50,ncol=1000)
+X=matrix(0,nrow=50,ncol=1000)
+e=matrix(0,nrow=50,ncol=1000)
+for( k in (1:1000)){
+  set.seed(k)
+  N=50
+  e[1:50,k]=rnorm(50,0,4)
+  X[1:50,k]=runif(50, min = -2, max = 2)
+  for (i in (1 :50)){
+    Y[1:50,k]=3+2*X[1:50,k]+e[1:50,k]
+  }
+}  
+betamean=rep(NA,1000)
+for (k in (1:1000)){
+ x=X[1:50,k]
+ y=Y[1:50,k]
+ df=data.frame(x,y)
+ model<-lm(y~x,data=df)
+ s=summary(model)# Slope Using Mean Square Error 
+ betamean[k]=s$coefficients[2,1]
+}
+truemean0=sum(betamean)/999
+hist(betamean,col='skyblue3',main='Slope:Analytical')
+abline(v=truemean0,col='red',lwd=2)
+#Histogram of Analytical Solution by repeating the sample 1000 times
+```
+#Answer 5 b-Histogram
+
+```{r cars121}
+#5b:Histogram for Batch Gradient for 1000 Simulation comparing beta1
+mnew=rep(0,1000)#Beta1
+mnew2=rep(0,1000)#Beta0/Intercept
+for(k in (1:1000)){
+  x=X[1:50,k]
+  y=Y[1:50,k]
+  j=1
+  i=1
+  m1=rep(0,2000)
+  m2=rep(0,2000)
+  gradmT1=matrix(0,nrow=2000,ncol=length(x))
+  gradmT2=matrix(0,nrow=2000,ncol=length(x))
+  eta=0.01
+  gradm1=matrix(0,nrow =2000,ncol = length(x))
+  gradm2=matrix(0,nrow=2000,ncol=length(x))
+  gradmT=matrix(0,nrow=2000,ncol=length(x))
+  t=0.01
+  m1[[j]]=0.01
+  m2[[j]]=0.01
+  e=matrix(0,nrow=2000,ncol=length(x))
+  e[1,1:length(x)]=(y-m1[[j]]*x-m2[[j]])^2# Error (Actual-Predicted)#Initial Error at m= initial m
+  averageerr=rep(0,2000)
+  averageerr[j]=sum(e[j,1:length(x)])/length(x)
+  gradm1[1,1:length(x)]=-2*(y-m1[[j]]*x-m2[[j]])*x# First derative  value for values of x 
+  gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+  gradmT1[j]
+  gradm2[1,1:length(x)]=-2*(y-m1[[j]]*x-m2[[j]])#Gradient for intecept 
+  gradmT2[j]=sum(gradm2[1,1:length(x)])/(length(x))
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  gradmT[j]
+  while ((gradmT[j])> t){# Because we have to stop when gradient is near the thresh hold value which means local minima
+    m1[j+1]=m1[[j]]-eta*gradmT1[j]# Create next  iterated slope
+    m2[j+1]=m2[[j]]-eta*gradmT2[j]
+    e[j+1,1:length(x)]=(y-m1[[j+1]]*x-m2[j+1])^2
+    averageerr[j+1]=sum(e[j+1,1:length(x)])/length(x)#Average error over x points 
+    gradm1[j+1,1:length(x)]=-2*(y-(m1[[j+1]]*x+m2[[j+1]]))*x#
+    gradmT1[j+1]=(sum(gradm1[j+1,1:length(x)]))/length(x)#Average Gradient 
+    gradm2[j+1,1:length(x)]=-2*(y-m1[[j+1]]*x-m2[[j+1]])
+    gradmT2[j+1]=(sum(gradm2[j+1,1:length(x)]))/length(x)
+    j=j+1
+    gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  }
+
+  mnew[k]=m1[j]#Slope beta 1
+  mnew2[k]=m2[j]# Slope-Intecept
+}
+hist(mnew,col='skyblue3',main='Beta1:Batch Grad-Quadratic Loss :Simulation',cex.main=0.8)
+truemean=sum(mnew)/999
+abline(v=truemean,col="red",lwd=2)
+hist(mnew2,col='skyblue3',main='Beta0/Intercept:Batch Grad-Quadratic Loss:Simulation',cex.main=0.8)
+truemean2=sum(mnew2)/999
+abline(v=truemean2,col="red",lwd=2)
+
+```
+
+
+```{r cars12b}
+mnew2=rep(0,1000)
+for (p in (1:1000)){
+  x=X[1:50,p]
+  y=Y[1:50,p]
+  j=1
+  k=1
+  j=1
+  m2=rep(0,4000)
+  e2=rep(0,4000)
+  m2[[j]]=0.01
+  length(y)
+  eta=0.01
+  gradm=rep(0,4000)
+  t=0.01
+  j=1
+  k=1
+  m2[[j]]=0.01
+  m3[[j]]=0.01
+  gradm1[j]=-2*(y[k]-m2[[j]]*x[k]-m3[j])*x[k]# First Deravative of slope beta1
+  gradm2[j]=-2*(y[k]-(m2[[j]]*x[k]-m3[j]))# First Deravative wrt to intercept /beta0
+  e2[[j]]=(y[k]-m2[[j]]*x[k]-m3[j])^2# Quadratic Error (Actual-Predicted)
+  gradm[[j]]=sqrt(gradm1[j]^2+gradm2[j]^2)
+  while (gradm[j]> t){# Because we have to stop when gradient is near zero
+      k=sample(1:length(x),1)# Sample the point 
+      # First Deravative
+      m2[[j+1]]=m2[[j]]-eta*gradm1[j]#Use new slope beta1
+      m3[[j+1]]=m3[[j]]-eta*gradm2[j]#use new slope for intercept beta0 
+      gradm1[j+1]=-2*(y[k]-m2[[j+1]]*x[k]-m3[[j+1]])*x[k]# Calculate new gradient based on new slope value [d/dm]
+      gradm2[j+1]=-2*(y[k]-m2[[j+1]]*x[k]-m3[j+1])# Gradient of Intercept 
+      e2[j+1]=(y[k]-m2[[j+1]]*x[k]-m3[j+1])^2# Error (Actual-Predicted Error for the new point with new slope
+      j=j+1
+      gradm[[j]]=sqrt(gradm1[j]^2+gradm2[j]^2)
+  }
+
+  mnew2[p]=m2[j]
+}
+hist(mnew2,main="Beta1 Histogram-Stochiastic Gradient:Quadratic Loss",col='skyblue3')
+truemean3=sum(mnew2)/(999)
+abline(v=truemean3,col='red',lwd=2)
+```
+#5b- Closed Form Analytical Solution and Batch Gradient Quadratic Loss both have same True Values of Slope Estimates. However Stochiastic Gradient has slighltylower true mean value as compared to other two solutions. Stochiastic Gradient Solution would not be preferred as compared to Batch Gradient and Analytical Solution when we have smaller data size.However it has good performance..Stochiastic Gradient solution is more suitable algorithm when we have huge training data and hence we can iterate easily to reach the optimum solution. However if data is less stochiastic gradient may slightly be less optimum as compared to other losses
+
+```{r cars12c}
+#5b #Summary
+par(mfrow=c(1,1))
+
+hist(betamean,col='skyblue3',main='Beta1Slope:Analytical')
+abline(v=truemean0,col='red',lwd=2)
+
+hist(mnew,col='skyblue3',main=' Beta1 Slope :Batch Gradient-L2/Quadratic ')
+truemean=sum(mnew)/999
+abline(v=truemean,col="red",lwd=2)
+
+hist(mnew2,main="Beta1 Slope:Stochiastic Gradient:L2/Quadratic",col='skyblue3')
+truemean3=sum(mnew2,na.rm=TRUE)/(999)
+abline(v=truemean3,col='red',lwd=2)
+```
+
+
+```{r cars122}
+#Square Loss : Analytical Solution 
+set.seed(123)
+N=50
+Y=rep(NA,50)
+e=rnorm(50,0,4)
+X=runif(50, min = -2, max = 2)
+Y[i]=3+2*X[i]+e[i]
+for (i in (1 :50)){
+  Y[i]=3+2*X[i]+e[i]
+}
+
+par=mfrow=c(1,1)
+df=data.frame(X,Y)
+model1<-lm(y~x,data=df)
+s=summary(model1)# Slope Using Mean Square Error 
+betamean=s$coefficients[2,1]
+print(paste("The coefficient of Slope based on analytical solution is ",betamean))
+######
+SE=(model1$residuals)^2
+# Graph of analytical Solution (Yactual- Ypred)^2
+plot(SE,type='l',col='skyblue3')
+hist(SE,col='skyblue3',main='Histogram of SE-Analytical Sol')
+MSE=sum(SE)/length(x)
+# 5c- Huber Loss
+# Huber Loss
+
+```
+
+
+```{r cars123}
+##5c- Mean absolute Loss Batch Gradient
+#Mean Absolute Loss : Batch Gradient Descent 
+#Please note- have changed algorithm slightly from while to For Loop and putting a break to improve performance.
+set.seed(123)
+N=50
+Y=rep(NA,50)
+e=rnorm(50,0,4)
+X=runif(50, min = -2, max = 2)
+Y[i]=3+2*X[i]+e[i]
+for (i in (1 :50)){
+  Y[i]=3+2*X[i]+e[i]
+}
+m2=rep(0,1000)
+m3=rep(0,1000)
+gradmT1=rep(0,1000)
+gradmT2=rep(0,1000)
+eta=0.01
+gradm1=matrix(0, nrow =1000, ncol = length(x))
+gradm2=matrix(0,nrow=1000,ncol=length(x))
+t=0.01
+j=1
+i=1
+m2[[j]]=0.01
+m3[[j]]=0.01
+e=matrix(0,nrow=1000,ncol=length(x))
+e[1,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])# Error (Actual-Predicted)#Initial Error at m= initial m
+averageerr=rep(0,1000)
+averageerr[j]=sum(e[j,1:length(x)])/length(x)
+averageerr[j]#Inital Average error
+gradm1[1,1:length(x)]=-x# First derative  value for values of x 
+gradm2[1,1:length(x)]=-1
+gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+gradmT2[j]=-1/length(x)
+gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+for (j in (1:1000)){
+  e[j,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])
+  averageerr[j]=sum(e[j,1:length(x)])/length(x)
+  gradm1[j,1:length(x)]=-x# First derative  value for values of x 
+  gradm2[j,1:length(x)]=-1
+  gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+  gradmT2[j]=sum(gradm2[j,1:length(x)])/length(x)
+  m2[[j+1]]=m2[[j]]-eta*gradmT1[j]# Next iteration slope value which will be needed if we move to next iteration 
+  m3[[j+1]]=m2[[j]]-eta*gradmT2[j]
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  if ((sqrt(sum(gradmT[j]^2)))<=t){
+    break
+  }
+}
+print(j)
+jopt=which.min(averageerr)
+mopt=m2[jopt]
+mopti=m3[jopt]
+print(paste("The optimized Beta1-Batch Gradient Absolute Loss ",mopt))
+plot(1:j,averageerr[1:j],type="l",main = "Absolute L1 loss : Batch Gradient process",ylab = "L1 loss",xlab=" Iterations")
+print(paste("The optimized intercept using -Batch Gradient Absolute Loss ",mopti))
+```
+
+
+```{r cars12}
+##Now Creating a function of Mean-Absolute Loss
+AbsoluteLoss<-function(x,y,eta,t,mi,niters){
+  x=x
+  y=y
+  t=t
+  j=1
+  i=1
+  m2=rep(0,niters+1)
+  m3=rep(0,niters+1)
+  gradmT1=rep(0,niters+1)
+  gradmT2=rep(0,niters+1)
+  eta=eta
+  gradm1=matrix(0,nrow =niters, ncol = length(x))
+  gradm2=matrix(0,nrow=niters,ncol=length(x))
+  t=t
+  j=1
+  i=1
+  m2[[j]]=mi
+  m3[[j]]=mi
+  e=matrix(0,nrow=niters,ncol=length(x))
+  e[1,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])# Error (Actual-Predicted)#Initial Error at m= initial m
+  averageerr=rep(0,niters)
+  averageerr[j]=sum(e[j,1:length(x)])/length(x)
+  averageerr[j]#Inital Average error
+  gradm1[1,1:length(x)]=-x# First derative Beta1  value for values of x 
+  gradm2[1,1:length(x)]=-1# FIrst deravative for slope for Beta0
+  gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+  gradmT2[j]=-1/length(x)
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  for (j in (1:niters)){
+    e[j,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])
+    averageerr[j]=sum(e[j,1:length(x)])/length(x)
+    gradm1[j,1:length(x)]=-x# First derative  value for values of x 
+    gradm2[j,1:length(x)]=-1
+    gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+    gradmT2[j]=sum(gradm2[j,1:length(x)])/length(x)
+    m2[[j+1]]=m2[[j]]-eta*gradmT1[j]# Next iteration slope value which will be needed if we move to next iteration 
+    m3[[j+1]]=m2[[j]]-eta*gradmT2[j]
+    gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+    if ((sqrt(sum(gradmT[j]^2)))<=t){
+      break
+    }
+  }
+  jopt=which.min(averageerr)
+  mopt=m2[jopt]
+  mopti=m3[jopt]
+  values<-list("loss"=averageerr,"Slope"=mopt,"TotalIterations"=j,"Beta0/Intercept"=mopti)
+  return(values)
+}
+```
+
+
+```{r cars1290}
+z=AbsoluteLoss(x=df$X,y=df$Y,eta=0.01,t=0.02,mi=0.01,niters=4000)
+plot(1:z$TotalIterations,z$loss[1:z$TotalIterations],main='Absolute Loss Batch  Search',ylab="Absolute Loss",xlab='Iterations')
+```
+
+
+```{r cars124}
+#5c Part 3-Huber Loss : USed Function this time for eas of accessibility
+r=huberlossf2(eta=0.01,t=0.01,x=df$X,y=df$Y,niters2 = 7000,alpha = 3.5,mi=0.01)
+plot(1:r$`iteration end`,r$loss[1:r$`iteration end`],main='Huber-Loss Batch Gradient:Alpha-3.5',ylab="HuberLoss",xlab = 'iterations')
+```
+
+
+```{r cars125}
+#5d
+#Square Loss : Analytical Solution -Simulation 1000
+
+Y=matrix(0,nrow=50,ncol=1000)
+X=matrix(0,nrow=50,ncol=1000)
+e=matrix(0,nrow=50,ncol=1000)
+for( k in (1:1000)){
+  set.seed(k)
+  N=50
+  e[1:50,k]=rnorm(50,0,4)
+  X[1:50,k]=runif(50, min = -2, max = 2)
+  Y[1:50,k]=3+2*X[1:50,k]+e[1:50,k]
+}
+beta1=rep(0,1000)
+beta0=rep(0,1000)
+for (k in (1:1000)){
+ x=X[1:50,k]
+ y=Y[1:50,k]
+ df=data.frame(x,y)
+ model<-lm(y~x,data=df)
+ s=summary(model)# Slope Using Mean Square Error 
+ beta1[k]=s$coefficients[2,1]
+ beta0[k]=s$coefficients[1,1]
+}
+truemean00=sum(beta1)/999
+hist(beta1,col='skyblue3',main='Slope/ Beta 1:Analytical')
+abline(v=truemean00,lwd=2,col='red')
+truemean11=sum(beta0)/999
+hist(beta0,col='skyblue3',main='InterceptSlope/ Beta 0:Analytical')
+abline(v=truemean11,lwd=2,col='red')
+
+#Histogram of Analytical Solution by repeating the sample 1000 times
+beta0=s$coefficients[1,1]
+
+
+```
+
+
+```{r cars126}
+#5 d- Histogram of Slopes -Simulation 1000 Trials-Mean Absolute L1 error
+mopt=rep(0,1000)
+motpi=rep(0,1000)
+for (k in (1: 1000)){
+  x=X[1:50,k]
+  y=Y[1:50,k]
+  m2=rep(0,1000)
+  m3=rep(0,1000)
+  gradmT1=rep(0,1000)
+  gradmT2=rep(0,1000)
+  eta=0.01
+  gradm1=matrix(0, nrow =1000, ncol = length(x))
+  gradm2=matrix(0,nrow=1000,ncol=length(x))
+  t=0.01
+  j=1
+  i=1
+  m2[[j]]=0.01
+  m3[[j]]=0.01
+  e=matrix(0,nrow=1000,ncol=length(x))
+  e[1,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])# Error (Actual-Predicted)#Initial Error at m= initial m
+  averageerr=rep(0,1000)
+  averageerr[j]=sum(e[j,1:length(x)])/length(x)
+  averageerr[j]#Inital Average error
+  gradm1[1,1:length(x)]=-x# First derative  value for values of x 
+  gradm2[1,1:length(x)]=-1
+  gradmT1[j]=sum(gradm1[1,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+  gradmT2[j]=-1/length(x)
+  gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+  for (j in (1:1000)){
+    e[j,1:length(x)]=abs(y-m2[[j]]*x-m3[[j]])
+    averageerr[j]=sum(e[j,1:length(x)])/length(x)
+    gradm1[j,1:length(x)]=-x# First derative  value for values of x 
+    gradm2[j,1:length(x)]=-1
+    gradmT1[j]=sum(gradm1[j,1:length(x)])/(length(x))# Average Gradient descent estimated for all points in x 
+    gradmT2[j]=sum(gradm2[j,1:length(x)])/length(x)
+    m2[[j+1]]=m2[[j]]-eta*gradmT1[j]# Next iteration slope value which will be needed if we move to next iteration 
+    m3[[j+1]]=m2[[j]]-eta*gradmT2[j]
+    gradmT[j]=sqrt(gradmT1[j]^2+gradmT2[j]^2)
+    if ((sqrt(sum(gradmT[j]^2)))<=t){
+      break
+    }
+  }
+  jopt=which.min(averageerr)
+  mopt[k]=m2[jopt]
+  mopti[k]=m3[jopt]
+}
+hist(mopt,main='Beta1:Absolute Loss,Batch Gradient',col='skyblue3')
+moptmean=sum(mopt,na.rm=TRUE)/999
+abline(v=moptmean,lwd=2,col='red')
+hist(mopti,main = 'Beta0/Intercept:Absolute Loss,Batch Gradient',col='Skyblue3')
+moptmean2=sum(mopti,na.rm=TRUE)/999
+abline(v=moptmean2,lwd=2,col='red')
+```
+
+
+```{r cars127}
+#5d
+#Huber Loss  Gradient Simulation
+beta0=rep(0,1000)
+beta1=rep(0,1000)
+for (k in (1: 1000)){
+  x=X[1:50,k]
+  y=Y[1:50,k]
+  m2=rep(0,5000)
+  model0<-huberlossf2(x,y,alpha = 10,mi=0.01,eta=0.01,niters=2000,t=0.01)
+  beta1[k]=model0$slope
+  beta0[k]=model0$intercept
+}
+hist(beta1,main='Beta1 -Huber  Gradient Batch,Alpha=10',col='skyblue3')
+hubermean=sum(beta1)/999
+abline(v=hubermean,col='red',lwd=2)
+hist(beta0,main='Beta0/Intercept-Huber Batch Grad,Alpha=10',col='skyblue3')
+hubermean0=sum(beta0)/999
+abline(v=hubermean0,col='red',lwd=2)
+
+
+
+
+
+
+```
+
+
+```{r cars128}
+#5d
+#sUMMARY for Beta 1 only 
+par(mfrow=c(2,2))
+hist(beta1,col='skyblue3',main='Slope/ Beta 1:Analytical',cex.main=0.8)
+abline(v=truemean00,lwd=2,col='red')
+hist(mopt,main='Beta1:Absolute Loss,Batch Gradient',col='skyblue3',cex.main=0.8)
+moptmean=sum(mopt,na.rm=TRUE)/999
+abline(v=moptmean,lwd=2,col='red')
+hist(beta1,main='Beta1 -Huber Grad.Batch,Alpha=10',col='skyblue3',cex.main=0.8)
+hubermean=sum(beta1)/999
+abline(v=hubermean,lwd=2,col='red')
+
+
+
+```
+#5d
+#Squared Loss using Analytical solution has most stable solution as compared  Mean Absolute Error . True value of Analytical Solution is is around 2 which is highest closely followed by Huber Loss .  MAE has lowest true value of slope estimate as compared to others. Overall-Square error would be most stable solution closely followed by Huber loss. This is because we have no outliers. Huber loss with high alpha will also give a stable solution, Please note we can consider huber loss but we have to choose a high alpha so that huber loss can start of with quadratic loss. Please see figure above for two algorithms on hUber loss with 2 different alpha values 
+
+
+```{r cars12999000}
+```
+
+
+```{r cars129}
+set.seed(123)
+N=50
+Y=rep(NA,50)
+e=rnorm(50,0,4)
+X=runif(50, min = -2, max = 2)
+for (i in (1 :50)){
+  Y[i]=3+2*X[i]+e[i]
+}
+
+par=mfrow=c(1,2)
+df=data.frame(X,Y)
+y2=df$Y
+x=df$X
+j=rbinom(50, 1, 0.1)# 1st Probability run to select item j as 1 give probability of 0.1 
+p=rep(0,50)
+y3=rep(0,50)
+for(k in (1:50)){
+    if (j[k]==1){
+      p=sample(0:1,1,rep=TRUE)# run a toss which is 1 or 0
+      if(p==1){
+        y3[k]=y2[k]+2*y2[k]
+      }else{
+        y3[k]=y2[k]-2*y2[k]
+      }
+    } else{
+      y3[k]=y2[k]
+    }
+  }
+y3
+
+
+# Analytical SOlution 
+dfnew=data.frame(x,y3)
+model3<-lm(y3~x,data=dfnew)
+s=summary(model3)# Slope Using Mean Square Error 
+betamean=s$coefficients[2,1]
+print(paste("The new coefficient of Slope with outlier data is ,",betamean))
+SSE=(model3$residuals)^2
+MSE=sum(SSE)/length(x)
+plot(SSE,type='l',col='skyblue3')
+hist(SSE,col='skyblue3',main='Histogram of SE-Analytical Sol')
+#Mean Absolute Error
+model2<- AbsoluteLoss(x=dfnew$x,y=dfnew$y3 ,eta=0.01,t=0.01,mi=0.01,niters =5000)
+plot(1:model2$TotalIterations,model2$loss[1:model2$TotalIterations],main='Batch Absolute Loss-With Outliers')
+print(paste("The Optimized Beta1 Slope for Batch Gradient Absolute Loss is ",model2$Slope))
+#Huber-Loss
+model3=huberlossf2(x=dfnew$x,y=dfnew$y3 ,eta=0.01,t=0.01,mi=0.01,niters2 =5000,alpha=3)
+length(model3$loss)
+plot(1:model3$`iteration end`,model3$loss[1:model3$`iteration end`],main='Batch Huber Loss-With Outliers,Alpha=3',xlab='iterations',ylab='Huberloss')
+print(paste("The Optimized Slope for Huber Loss is ", model3$slope))
+model3$slope
+model4<-huberlossf2(x=dfnew$x,y=dfnew$y3 ,eta=0.01,t=0.01,mi=0.01,niters2 =5000,alpha=0.02)
+plot(1:model4$`iteration end`,model4$loss[1:model4$`iteration end`],main='Batch Huber Loss-With Outliers,Alpha=0.02',xlab='iterations',ylab='Huberloss')
+```
+# 5 f-Repeat 1000 times Histogramof Estimates and overlay true value.
+# Comment-Mean Absolute Loss with Batch Gradient gives a  better estimate as it is more stable and not senstive to outliers.  Closed Form Analytical solution has a high value of Slope as compared than Huber Loss and Mean Absolute error. If we take alpha =3 -Huber Loss will have best of both and hence Huberloss is also good loss to consider for estimates as it is not as senstive to outliers as compared to MSE. Absolute Error will have least impact of outliers , which is closely followed by Huber Loss (Depending on alpha as well.). Quadratic Loss is very senstive to outliers and hence if data has outlier measurements -we could remove the outliers. Once removed we could us L2/Quadratic Loss
+
+```{r cars1210}
+##5f
+# Running Trial 1000 times in including Probability Run
+Y=matrix(0,nrow=50,ncol=1000)
+X=matrix(0,nrow=50,ncol=1000)
+e=matrix(0,nrow=50,ncol=1000)
+for( k in (1:1000)){
+  set.seed(k)
+  N=50
+  e[1:50,k]=rnorm(50,0,4)
+  X[1:50,k]=runif(50, min = -2, max = 2)
+  Y[1:50,k]=3+2*X[1:50,k]+e[1:50,k]
+}
+betamean=rep(NA,1000)
+y3=matrix(0,nrow=50,ncol=1000)
+for (k in (1:1000)){
+  x=X[1:50,k]
+  y=Y[1:50,k]
+  j=rbinom(50, 1, 0.1)# 1st Probability run to select item j as 1 give probability of 0.1 in vector y  
+  p=rep(0,50)
+  
+  for(m in (1:50)){
+    if (j[m]==1){
+      p=sample(0:1,1,rep=TRUE)# run a toss which is 1 or 0
+      if(p==1){
+        y3[m,k]=y[m]+2*y[m]
+      }else{
+        y3[m,k]=y[m]-2*y[m]
+      }
+    } else{
+      y3[m,k]=y[m]
+    }
+  }
+
+}
+
+# As data is ready # Running the model 1000 times for analytical
+huberslope=rep(0,1000)
+Absoluteslope=rep(0,1000)
+huberslope4=rep(0,1000)
+for (k in (1:1000)){
+  x=X[1:50,k]
+  y=y3[1:50,k]
+  df=data.frame(x,y)
+  model<-lm(y~x,data=df)
+  s=summary(model)# Slope Using Mean Square Error 
+  betamean[k]=s$coefficients[2,1]
+  model2<-huberlossf2(x,y,eta=0.01,mi=0.01,niters2 = 5000,alpha=3,t=0.01)
+  huberslope[k]=model2$slope
+  model4<-huberlossf2(x,y,eta=0.01,mi=0.01,niters2 = 5000,alpha=0.02,t=0.01)
+  huberslope4[k]<-model4$slope
+  model3<-AbsoluteLoss(x,y,eta=0.01,mi=0.01,niters=5000,t=0.01)
+  Absoluteslope[k]=model3$Slope
+  
+}
+model4$slope
+mean1=sum(betamean)/999
+mean2=sum(huberslope)/(1000-1)
+mean2a=sum(huberslope4)/(1000-1)
+mean3=sum(Absoluteslope)/(1000-1)
+par(mfrow=c(2,2))
+hist(betamean,col='skyblue3',main='Slope/Beta1:Analytical',cex.main=0.8)
+abline(v=mean1,col='red',lwd=2)
+hist(huberslope,col='skyblue3',main='Slope/Beta1:Huberloss with alpha=3',cex.main=0.8)
+abline(v=mean2,col='red',lwd=2)
+hist(huberslope4,col='skyblue3',main='Slope/Beta1:Huberloss with alpha=0.02',cex.main=0.8)
+abline(v=mean2a,col='red',lwd=2)
+
+hist(Absoluteslope,col='skyblue3',main='Slope/Beta1 Absolute Loss',cex.main=0.8)
+abline(v=mean3,col='red',lwd=2)
+
+```
